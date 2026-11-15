@@ -1,0 +1,8 @@
+{
+  "name": "成像检测交付的坐标谱图与外置数据配对采集",
+  "probe": "/deliveries",
+  "identityFields": [
+    "delivery",
+    "coordinate"
+  ]
+}
