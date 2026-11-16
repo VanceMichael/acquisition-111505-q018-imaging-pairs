@@ -17,7 +17,14 @@ try {
   console.log(JSON.stringify({ 来源状态: observed.status, 原始字节: raw.length, 来源类型: observed.headers.get('content-type') }));
   const accepted = await fetch(base + '/api/manual', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(sample) });
   console.log(JSON.stringify({ 人工收件: await accepted.json() }));
-  const pending = await fetch(base + '/api/collect', { method: 'POST' });
-  console.log(JSON.stringify({ 自动接入状态: pending.status, 说明: await pending.json() }));
-  console.log(JSON.stringify({ 已存记录: await (await fetch(base + '/api/records')).json() }));
+  const collected = await fetch(base + '/api/collect', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ source }) });
+  const collection = await collected.json();
+  console.log(JSON.stringify({ 自动采集状态: collected.status, 交付: collection }));
+  const records = await (await fetch(base + '/api/records')).json();
+  console.log(JSON.stringify({ 已存记录数: records.length, 来源分布: records.map(record => record.source) }));
+  const pixel = records.find(record => record.source === 'auto' && record.identity.coordinate.join(',') === '1,1,1');
+  if (pixel) {
+    const current = pixel.versions.at(-1).data;
+    console.log(JSON.stringify({ 像素: current.coordinate, 质量轴: current.mz, 强度: current.intensity, 原始字节: current.provenance }));
+  }
 } finally { intake.closeAllConnections(); provider.closeAllConnections(); await Promise.all([new Promise(resolve => intake.close(resolve)), new Promise(resolve => provider.close(resolve))]); await rm(directory, { recursive: true, force: true }); }
